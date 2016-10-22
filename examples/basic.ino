@@ -28,13 +28,14 @@ bool init_kinton_config() {
   File kinton_config = SPIFFS.open(CONFIG_FILE, "r");
   if (kinton_config) {
     kinton_config.readBytes(device_uuid, 36);
+    kinton_config.readStringUntil('\n');
     kinton_config.readBytes(device_secret, 64);
 
     device_uuid[36] = '\0';
     device_secret[64] = '\0';
     kinton_config.close();
 
-    kinton.setCredentials(device_uuid, device_secret);
+    kinton.setCredentials(strdup(device_uuid), strdup(device_secret));
   } else {
 
     // If credentials not found, then perform the registration
