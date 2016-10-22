@@ -54,6 +54,8 @@ bool init_kinton_config() {
       return false;
     }
   }
+
+  return true;
 }
 
 void setup() {
@@ -85,6 +87,8 @@ void setup() {
   device_topic += kinton.getDeviceUUID();
 
   kinton.addTopic(device_topic.c_str());
+
+  return;
 
 halt:
   Serial.println("Halted");
