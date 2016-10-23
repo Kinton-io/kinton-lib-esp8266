@@ -23,13 +23,18 @@ static const char *KINTON_API_REGISTER_METHOD = "/registerMote";
 
 class KintonMQTT {
 public:
+  // Attributes
+  char *topics[MAX_TOPICS];
+
+  // Methods
   KintonMQTT(WiFiClient client, const char *mqtt_id);
   void setCredentials(const char *device_uuid, const char *device_secret);
   bool registerDevice(const char *fleet_key);
-  void addTopic(const char *topic);
+  void on(const char *topic, void (*)(byte *payload, unsigned int length));
   const char *getDeviceUUID();
   const char *getDeviceSecret();
   bool loop();
+  void (*callbacks[MAX_TOPICS])(byte *payload, unsigned int length);
 
 private:
   // Attributes
@@ -38,7 +43,6 @@ private:
   const char *mqtt_id;
   const char *device_uuid;
   const char *device_secret;
-  char *topics[MAX_TOPICS];
 
   PubSubClient *client;
 

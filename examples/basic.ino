@@ -58,6 +58,13 @@ bool init_kinton_config() {
   return true;
 }
 
+void device_topic_handler(byte *payload, unsigned int length) {
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println("");
+}
+
 void setup() {
   Serial.begin(115200);
   SPIFFS.begin();
@@ -86,7 +93,7 @@ void setup() {
   device_topic += "/";
   device_topic += kinton.getDeviceUUID();
 
-  kinton.addTopic(device_topic.c_str());
+  kinton.on(device_topic.c_str(), device_topic_handler);
 
   return;
 

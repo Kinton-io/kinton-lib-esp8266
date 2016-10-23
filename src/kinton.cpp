@@ -17,6 +17,21 @@
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
 
+struct Handler {
+  KintonMQTT *kinton = NULL;
+
+  void operator()(char *topic, byte *payload, unsigned int length) {
+    Serial.println(topic);
+
+    for (int i = 0; i < MAX_TOPICS; i++) {
+      if (NULL != kinton->topics[i] && 0 == strcmp(topic, kinton->topics[i])) {
+        kinton->callbacks[i](payload, length);
+        break;
+      }
+    }
+  }
+};
+
 KintonMQTT::KintonMQTT(WiFiClient client, const char *mqtt_id) {
   this->mqtt_id = mqtt_id;
   this->device_uuid = NULL;
@@ -25,7 +40,10 @@ KintonMQTT::KintonMQTT(WiFiClient client, const char *mqtt_id) {
     this->topics[i] = NULL;
   }
 
+  Handler handler;
+  handler.kinton = this;
   this->client = new PubSubClient(this->kinton_ip, this->kinton_port, client);
+  this->client->setCallback(handler);
 }
 
 bool KintonMQTT::registerDevice(const char *fleet_key) {
@@ -79,15 +97,13 @@ bool KintonMQTT::connect() {
 
   Serial.println("Connected to Kinton");
 
-  // Subscribe to every topic
-  uint8_t i = 0;
-  while (this->topics[i] != NULL) {
-    if (!this->client->subscribe(this->topics[i])) {
-      return false;
-    }
-
-    Serial.printf("Subscribed to %s\n", this->topics[i]);
-    if (++i >= MAX_TOPICS - 1) {
+  for (int i = 0; i < MAX_TOPICS; i++) {
+    if (this->topics[i] != NULL) {
+      if (!this->client->subscribe(this->topics[i])) {
+        return false;
+      }
+      Serial.print("Subscribed to: ");
+      Serial.println(this->topics[i]);
       break;
     }
   }
@@ -105,11 +121,13 @@ bool KintonMQTT::loop() {
   return this->client->loop();
 }
 
-void KintonMQTT::addTopic(const char *topic) {
-  uint8_t i = 0;
-  while (this->topics[i] != NULL) {
-    i++;
+void KintonMQTT::on(const char *topic,
+                    void (*cb)(byte *payload, unsigned int length)) {
+  for (int i = 0; i < MAX_TOPICS; i++) {
+    if (this->topics[i] == NULL) {
+      this->topics[i] = strdup(topic);
+      this->callbacks[i] = cb;
+      break;
+    }
   }
-
-  this->topics[i] = strdup(topic);
 }
