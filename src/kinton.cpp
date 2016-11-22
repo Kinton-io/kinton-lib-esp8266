@@ -15,7 +15,6 @@
 #include "kinton.hpp"
 
 #include <ArduinoJson.h>
-#include <ESP8266HTTPClient.h>
 
 struct Handler {
   KintonMQTT *kinton = NULL;

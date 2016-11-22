@@ -14,6 +14,7 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <ESP8266HTTPClient.h>
 
 static const uint8_t MAX_TOPICS = 32;
 static const uint16_t KINTON_PORT = 1884;
@@ -25,6 +26,7 @@ class KintonMQTT {
 public:
   // Attributes
   char *topics[MAX_TOPICS];
+  void (*callbacks[MAX_TOPICS])(byte *payload, unsigned int length);
 
   // Methods
   KintonMQTT(WiFiClient client, const char *mqtt_id);
@@ -34,7 +36,6 @@ public:
   const char *getDeviceUUID();
   const char *getDeviceSecret();
   bool loop();
-  void (*callbacks[MAX_TOPICS])(byte *payload, unsigned int length);
 
 private:
   // Attributes
